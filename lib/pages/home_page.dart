@@ -1,5 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:provider/provider.dart';
 import 'package:tmdb_movie_explorer/api/image_cacher.dart';
 import 'package:tmdb_movie_explorer/heroWidgets/all_heros.dart';
@@ -17,7 +18,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<void> _moviesFuture;
-  int page=0;
+  int page = 0;
   @override
   void initState() {
     super.initState();
@@ -32,89 +33,109 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: page,
-        onDestinationSelected: (value) {
-          setState(() {
-            page = value;
-          });
-        },
-        labelBehavior: .onlyShowSelected,
-        destinations: [
-          NavigationDestination(
-            label: 'home',
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_filled),
+      bottomNavigationBar: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: 10,
+            sigmaY: 100,
+            tileMode: TileMode.repeated,
           ),
-          NavigationDestination(
-            label: 'search',
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search),
+          child: NavigationBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            selectedIndex: page,
+            onDestinationSelected: (value) {
+              setState(() {
+                page = value;
+              });
+            },
+            labelBehavior: .onlyShowSelected,
+            destinations: [
+              NavigationDestination(
+                label: 'home',
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home_filled),
+              ),
+              NavigationDestination(
+                label: 'search',
+                icon: Icon(Icons.search_outlined),
+                selectedIcon: Icon(Icons.search),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(
-              height: 600,
-              child: Stack(
+      body: page == 0
+          ? SingleChildScrollView(
+              child: Column(
                 children: [
+                  SizedBox(
+                    height: 600,
+                    child: Stack(
+                      children: [
+                        CustomCarousel(
+                          moviesFuture: _moviesFuture,
+                          options: CarouselOptions(
+                            height: 600,
+                            viewportFraction: 1,
+                            autoPlay: true,
+                            enlargeCenterPage: false,
+                          ),
+                          type: MovieType.popular,
+                        ),
+
+                        SafeArea(
+                          child: Container(
+                            height: 50,
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 5,
+                                  ),
+                                  child: const LogoAnim(),
+                                ),
+                                const Spacer(),
+                                IconButton(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const SettingsPage(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const UserHero(),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                   CustomCarousel(
                     moviesFuture: _moviesFuture,
                     options: CarouselOptions(
-                      height: 600,
-                      viewportFraction: 1,
-                      autoPlay: true,
-                      enlargeCenterPage: false,
+                      viewportFraction: 0.4,
+                      autoPlay: false,
                     ),
-                    type: MovieType.popular,
+                    type: MovieType.top_rated,
                   ),
 
-                  SafeArea(
-                    child: Container(
-                      height: 50,
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 5),
-                            child: const LogoAnim(),
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const SettingsPage(),
-                                ),
-                              );
-                            },
-                            icon: const UserHero(),
-                          ),
-                        ],
-                      ),
+                  CustomCarousel(
+                    moviesFuture: _moviesFuture,
+                    options: CarouselOptions(
+                      viewportFraction: 0.4,
+                      autoPlay: false,
                     ),
+                    type: MovieType.upcoming,
                   ),
                 ],
               ),
-            ),
-
-            CustomCarousel(
-              moviesFuture: _moviesFuture,
-              options: CarouselOptions(viewportFraction: 0.4, autoPlay: false),
-              type: MovieType.top_rated,
-            ),
-
-            CustomCarousel(
-              moviesFuture: _moviesFuture,
-              options: CarouselOptions(viewportFraction: 0.4, autoPlay: false),
-              type: MovieType.upcoming,
-            ),
-          ],
-        ),
-      ),
+            )
+          : Center(child: Text("Search feature will be added soon!")),
     );
   }
 }
@@ -131,7 +152,7 @@ class PopularMovieCard extends StatelessWidget {
       children: [
         TmdbImage(
           size: TmdbImageSize.original,
-          path: movie['backdrop_path'],
+          path: movie['poster_path'],
           fit: BoxFit.fitHeight,
         ),
 
@@ -140,7 +161,13 @@ class PopularMovieCard extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.transparent, Colors.black],
+              colors: [
+                Colors.transparent,
+                Colors.transparent,
+                Colors.transparent,
+                Colors.transparent,
+                Colors.black,
+              ],
             ),
           ),
         ),
@@ -148,21 +175,9 @@ class PopularMovieCard extends StatelessWidget {
         Positioned(
           left: 20,
           right: 20,
-          bottom: 40,
+          bottom: 5,
           child: Column(
             children: [
-              Text(
-                movie['title'],
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 34,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

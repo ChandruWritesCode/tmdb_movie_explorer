@@ -32,6 +32,9 @@ class MyApp extends StatelessWidget {
             useMaterial3: true,
             // colorSchemeSeed: const Color.fromRGBO(13, 37, 63, 1),
             colorSchemeSeed: const Color.fromRGBO(1, 180, 228, 1),
+            scaffoldBackgroundColor: settings.darkMode
+                ? Colors.black
+                : Colors.white,
           ),
           home: context.read<SettingsProvider>().firstLogin
               ? LoginPage()
