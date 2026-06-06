@@ -4,6 +4,8 @@ import 'dart:ui';
 import 'package:provider/provider.dart';
 import 'package:tmdb_movie_explorer/api/image_cacher.dart';
 import 'package:tmdb_movie_explorer/heroWidgets/all_heros.dart';
+import 'package:tmdb_movie_explorer/pages/movie_detail_page.dart';
+import 'package:tmdb_movie_explorer/pages/see_all.dart';
 import 'package:tmdb_movie_explorer/pages/settings_page.dart';
 import 'package:tmdb_movie_explorer/providers/tmdb_api_call.dart';
 
@@ -132,6 +134,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     type: MovieType.upcoming,
                   ),
+                  SizedBox(height: 20),
                 ],
               ),
             )
@@ -190,7 +193,11 @@ class PopularMovieCard extends StatelessWidget {
                   const SizedBox(width: 12),
 
                   OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => MovieDetailPage()),
+                      );
+                    },
                     child: const Text("Details"),
                   ),
                 ],
@@ -225,6 +232,10 @@ class CustomCarousel extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
+          // if (snapshot.hasError) {
+          //   return Center(child: Text('${snapshot.error}'));
+          // }
+
           final movies = api.popularMovies;
 
           return CarouselSlider.builder(
@@ -254,7 +265,19 @@ class CustomCarousel extends StatelessWidget {
 
               const Spacer(),
 
-              TextButton(onPressed: () {}, child: const Text('See all')),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => SeeAllMovieList(
+                        type: type,
+                        moviesFuture: _moviesFuture,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('See all'),
+              ),
             ],
           ),
         ),
@@ -281,7 +304,16 @@ class CustomCarousel extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                      child: MovieCard(type: type, idx: idx),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => MovieDetailPage(),
+                            ),
+                          );
+                        },
+                        child: MovieCard(type: type, idx: idx),
+                      ),
                     ),
                   );
                 },
@@ -316,7 +348,11 @@ class MovieCard extends StatelessWidget {
         }
         final movie = api.popularMovies[idx];
         imagePath = movie['backdrop_path'];
-        return TmdbImage(path: imagePath, fit: BoxFit.cover);
+        return TmdbImage(
+          size: TmdbImageSize.original,
+          path: imagePath,
+          fit: BoxFit.cover,
+        );
       } else if (type == MovieType.top_rated) {
         if (idx >= api.topRatedMovies.length) {
           return Container(
@@ -326,7 +362,11 @@ class MovieCard extends StatelessWidget {
         }
         final movie = api.topRatedMovies[idx];
         imagePath = movie['poster_path'];
-        return TmdbImage(path: imagePath, fit: BoxFit.cover);
+        return TmdbImage(
+          path: imagePath,
+          fit: BoxFit.cover,
+          size: TmdbImageSize.w342,
+        );
       } else {
         if (idx >= api.upComingMovies.length) {
           return Container(
@@ -336,7 +376,11 @@ class MovieCard extends StatelessWidget {
         }
         final movie = api.upComingMovies[idx];
         imagePath = movie['poster_path'];
-        return TmdbImage(path: imagePath, fit: BoxFit.cover);
+        return TmdbImage(
+          path: imagePath,
+          fit: BoxFit.cover,
+          size: TmdbImageSize.w342,
+        );
       }
     } catch (e) {
       return Container(

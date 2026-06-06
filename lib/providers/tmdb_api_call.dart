@@ -6,7 +6,9 @@ import 'package:tmdb_movie_explorer/api/api.dart';
 
 class ApiCallManager extends ChangeNotifier {
   Future<List> getPopular() async {
-    final response = await http.get(Uri.parse(popularUrl));
+    final response = await http
+        .get(Uri.parse(popularUrl))
+        .timeout(Duration(seconds: 10));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body)['results'];
@@ -28,7 +30,9 @@ class ApiCallManager extends ChangeNotifier {
   }
 
   Future<List> getUpcoming() async {
-    final response = await http.get(Uri.parse(upcomingUrl));
+    final response = await http
+        .get(Uri.parse(upcomingUrl))
+        .timeout(const Duration(seconds: 10));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body)['results'];
@@ -39,9 +43,9 @@ class ApiCallManager extends ChangeNotifier {
   }
 
   Future<List> get(String type) async {
-    if(type == 'Popular') {
+    if (type == 'Popular') {
       return getPopular();
-    } else if(type == 'Top Rated'){
+    } else if (type == 'Top Rated') {
       return getTopRated();
     } else {
       return getUpcoming();
@@ -52,7 +56,7 @@ class ApiCallManager extends ChangeNotifier {
   List upComingMovies = [];
   List topRatedMovies = [];
   List popularMovies = [];
-  int x=0;
+  int x = 0;
 
   Future<String?> init() async {
     try {
@@ -64,8 +68,7 @@ class ApiCallManager extends ChangeNotifier {
       if (upComingMovies.isEmpty ||
           topRatedMovies.isEmpty ||
           popularMovies.isEmpty) {
-        print('init is called');
-        init();
+        await init();
         notifyListeners();
       }
     }

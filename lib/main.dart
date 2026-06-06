@@ -8,21 +8,27 @@ import 'package:tmdb_movie_explorer/providers/tmdb_api_call.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final settingsProvider = SettingsProvider();
+  final apiManager = ApiCallManager();
   await settingsProvider.init();
-  runApp(MyApp(settingsProvider: settingsProvider));
+  await apiManager.init();
+  runApp(MyApp(settingsProvider: settingsProvider, apiCallManager: apiManager));
 }
 
 class MyApp extends StatelessWidget {
   final SettingsProvider settingsProvider;
-
-  const MyApp({super.key, required this.settingsProvider});
+  final ApiCallManager apiCallManager;
+  const MyApp({
+    super.key,
+    required this.settingsProvider,
+    required this.apiCallManager,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
-        ChangeNotifierProvider(create: (_) => ApiCallManager()),
+        ChangeNotifierProvider<ApiCallManager>.value(value: apiCallManager),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, child) => MaterialApp(
