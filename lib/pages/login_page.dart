@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tmdb_movie_explorer/pages/home_page.dart';
 import 'package:tmdb_movie_explorer/providers/basic_providers.dart';
-import 'package:tmdb_movie_explorer/providers/tmdb_api_call.dart';
 
 class LoginPage extends StatelessWidget {
   final TextEditingController userNameCont = TextEditingController();
@@ -45,7 +44,6 @@ class LoginPage extends StatelessWidget {
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: () {
-                  context.read<ApiCallManager>().init();
                   context.read<SettingsProvider>().setUserName(
                     userNameCont.text,
                   );

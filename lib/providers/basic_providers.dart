@@ -18,8 +18,12 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+
     _darkMode = _prefs.getBool('darkMode') ?? true;
     _userName = _prefs.getString('userName') ?? '';
+
+    _firstLogin = _prefs.getBool('firstLogin') ?? true;
+
     notifyListeners();
   }
 

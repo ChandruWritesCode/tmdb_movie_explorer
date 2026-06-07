@@ -24,12 +24,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
-    _moviesFuture = Future.wait([
-      context.read<ApiCallManager>().get('Popular'),
-      context.read<ApiCallManager>().get('Top Rated'),
-      context.read<ApiCallManager>().get('Upcoming'),
-    ]);
+    _moviesFuture = context.read<ApiCallManager>().init();
   }
 
   @override
@@ -232,11 +227,46 @@ class CustomCarousel extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // if (snapshot.hasError) {
-          //   return Center(child: Text('${snapshot.error}'));
-          // }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: IconButton.filledTonal(
+                onPressed: () {
+                  context.read<ApiCallManager>().init();
+                },
+                icon: Icon(Icons.circle_notifications),
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Failed to load movies\n${snapshot.error}',
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
 
           final movies = api.popularMovies;
+
+          if (movies.isEmpty) {
+            return Padding(
+              padding: EdgeInsetsGeometry.only(top: 200),
+              child: Center(
+                child: Column(
+                  children: [
+                    Text("API failure click retry to load movies"),
+                    TextButton(
+                      onPressed: () {
+                        api.getPopular();
+                      },
+                      child: Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
 
           return CarouselSlider.builder(
             options: options!,
@@ -289,9 +319,38 @@ class CustomCarousel extends StatelessWidget {
               return const CircularProgressIndicator();
             }
 
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Failed to load movies\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+              );
+            }
+
             final itemCount = type == MovieType.top_rated
                 ? api.topRatedMovies.length
                 : api.upComingMovies.length;
+
+            if (itemCount == 0) {
+              return Center(
+                child: Column(
+                  children: [
+                    Text("API failure click retry to load movies"),
+                    TextButton(
+                      onPressed: () {
+                        if (type == MovieType.upcoming) {
+                          api.getUpcoming();
+                        } else {
+                          api.getTopRated();
+                        }
+                      },
+                      child: Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
 
             return SizedBox(
               width: double.infinity,

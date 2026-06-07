@@ -10,7 +10,6 @@ void main() async {
   final settingsProvider = SettingsProvider();
   final apiManager = ApiCallManager();
   await settingsProvider.init();
-  await apiManager.init();
   runApp(MyApp(settingsProvider: settingsProvider, apiCallManager: apiManager));
 }
 
