@@ -38,8 +38,17 @@ class SeeAllMovieList extends StatelessWidget {
               itemBuilder: (context, idx) {
                 return GestureDetector(
                   onTap: () {
+                    context.read<ApiCallManager>().getDetails(
+                      moviesList[idx]['id'].toString(),
+                    );
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => MovieDetailPage()),
+                      MaterialPageRoute(
+                        builder: (_) => MovieDetailPage(
+                          movieId: type == MovieType.top_rated
+                              ? api.topRatedMovies[idx]['id'].toString()
+                              : api.upComingMovies[idx]['id'].toString(),
+                        ),
+                      ),
                     );
                   },
                   child: Column(
@@ -57,12 +66,12 @@ class SeeAllMovieList extends StatelessWidget {
                               child: MovieCard(type: type, idx: idx),
                             ),
                           ),
-                          Column(
-                            // details and actions
-                            children: [
-                              SizedBox(
-                                width: 200,
-                                child: Text(
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              // details and actions
+                              children: [
+                                Text(
                                   overflow: TextOverflow.fade,
                                   maxLines: 2,
                                   moviesList[idx]['title'],
@@ -71,27 +80,22 @@ class SeeAllMovieList extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ),
-                              SizedBox(
-                                width: 200,
-                                child: Text(
+                                Text(
+                                  overflow: TextOverflow.fade,
                                   style: const TextStyle(fontSize: 12),
                                   maxLines: 4,
                                   softWrap: true,
                                   moviesList[idx]['overview'],
                                 ),
-                              ),
-                              SizedBox(
-                                width: 200,
-                                child: Text(
+                                Text(
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                   ),
                                   'Release: ${moviesList[idx]['release_date']}',
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),

@@ -1,6 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:provider/provider.dart';
 import 'package:tmdb_movie_explorer/api/image_cacher.dart';
 import 'package:tmdb_movie_explorer/heroWidgets/all_heros.dart';
@@ -31,109 +30,105 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: 10,
-            sigmaY: 100,
-            tileMode: TileMode.repeated,
-          ),
-          child: NavigationBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            selectedIndex: page,
-            onDestinationSelected: (value) {
-              setState(() {
-                page = value;
-              });
-            },
-            labelBehavior: .onlyShowSelected,
-            destinations: [
-              NavigationDestination(
-                label: 'home',
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home_filled),
-              ),
-              NavigationDestination(
-                label: 'search',
-                icon: Icon(Icons.search_outlined),
-                selectedIcon: Icon(Icons.search),
-              ),
-            ],
-          ),
+        child: NavigationBar(
+          elevation: 0,
+          selectedIndex: page,
+          onDestinationSelected: (value) {
+            setState(() {
+              page = value;
+            });
+          },
+          labelBehavior: .onlyShowSelected,
+          destinations: [
+            const NavigationDestination(
+              label: 'home',
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home_filled),
+            ),
+            const NavigationDestination(
+              label: 'search',
+              icon: Icon(Icons.search_outlined),
+              selectedIcon: Icon(Icons.search),
+            ),
+          ],
         ),
       ),
-      body: page == 0
-          ? SingleChildScrollView(
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 600,
-                    child: Stack(
-                      children: [
-                        CustomCarousel(
-                          moviesFuture: _moviesFuture,
-                          options: CarouselOptions(
-                            height: 600,
-                            viewportFraction: 1,
-                            autoPlay: true,
-                            enlargeCenterPage: false,
-                          ),
-                          type: MovieType.popular,
+      body: IndexedStack(
+        index: page,
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 600,
+                  child: Stack(
+                    children: [
+                      CustomCarousel(
+                        moviesFuture: _moviesFuture,
+                        options: CarouselOptions(
+                          height: 600,
+                          viewportFraction: 1,
+                          autoPlay: true,
+                          enlargeCenterPage: false,
                         ),
+                        type: MovieType.popular,
+                      ),
 
-                        SafeArea(
-                          child: Container(
-                            height: 50,
-                            padding: EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 5,
-                                  ),
-                                  child: const LogoAnim(),
+                      SafeArea(
+                        child: Container(
+                          height: 50,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 5,
                                 ),
-                                const Spacer(),
-                                IconButton(
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const SettingsPage(),
-                                      ),
-                                    );
-                                  },
-                                  icon: const UserHero(),
-                                ),
-                              ],
-                            ),
+                                child: const LogoAnim(),
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const SettingsPage(),
+                                    ),
+                                  );
+                                },
+                                icon: const UserHero(),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
+                ),
 
-                  CustomCarousel(
-                    moviesFuture: _moviesFuture,
-                    options: CarouselOptions(
-                      viewportFraction: 0.4,
-                      autoPlay: false,
-                    ),
-                    type: MovieType.top_rated,
+                CustomCarousel(
+                  moviesFuture: _moviesFuture,
+                  options: CarouselOptions(
+                    viewportFraction: 0.4,
+                    autoPlay: false,
                   ),
+                  type: MovieType.top_rated,
+                ),
 
-                  CustomCarousel(
-                    moviesFuture: _moviesFuture,
-                    options: CarouselOptions(
-                      viewportFraction: 0.4,
-                      autoPlay: false,
-                    ),
-                    type: MovieType.upcoming,
+                CustomCarousel(
+                  moviesFuture: _moviesFuture,
+                  options: CarouselOptions(
+                    viewportFraction: 0.4,
+                    autoPlay: false,
                   ),
-                  SizedBox(height: 20),
-                ],
-              ),
-            )
-          : Center(child: Text("Search feature will be added soon!")),
+                  type: MovieType.upcoming,
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+          const Center(child: Text("Search feature will be added soon!")),
+        ],
+      ),
     );
   }
 }
@@ -151,7 +146,7 @@ class PopularMovieCard extends StatelessWidget {
         TmdbImage(
           size: TmdbImageSize.original,
           path: movie['poster_path'],
-          fit: BoxFit.fitHeight,
+          fit: BoxFit.contain,
         ),
 
         Container(
@@ -159,13 +154,7 @@ class PopularMovieCard extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.transparent,
-                Colors.transparent,
-                Colors.transparent,
-                Colors.black,
-              ],
+              colors: [Colors.transparent, Colors.transparent, Colors.black],
             ),
           ),
         ),
@@ -189,8 +178,14 @@ class PopularMovieCard extends StatelessWidget {
 
                   OutlinedButton(
                     onPressed: () {
+                      context.read<ApiCallManager>().getDetails(
+                        movie['id'].toString(),
+                      );
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => MovieDetailPage()),
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              MovieDetailPage(movieId: movie['id'].toString()),
+                        ),
                       );
                     },
                     child: const Text("Details"),
@@ -220,25 +215,18 @@ class CustomCarousel extends StatelessWidget {
   Widget build(BuildContext context) {
     final api = context.watch<ApiCallManager>();
     if (type == MovieType.popular) {
+      // TODO optimize the Future builders and watch providers
       return FutureBuilder(
         future: _moviesFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          bool isLoading = false;
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: IconButton.filledTonal(
-                onPressed: () {
-                  context.read<ApiCallManager>().init();
-                },
-                icon: Icon(Icons.circle_notifications),
-              ),
-            );
-          }
-
           if (snapshot.hasError) {
+            isLoading = false;
             return Center(
               child: Text(
                 'Failed to load movies\n${snapshot.error}',
@@ -255,12 +243,13 @@ class CustomCarousel extends StatelessWidget {
               child: Center(
                 child: Column(
                   children: [
-                    Text("API failure click retry to load movies"),
+                    const Text("API failure click retry to load movies"),
                     TextButton(
                       onPressed: () {
+                        isLoading = true;
                         api.getPopular();
                       },
-                      child: Text('Retry'),
+                      child: const Text('Retry'),
                     ),
                   ],
                 ),
@@ -311,7 +300,6 @@ class CustomCarousel extends StatelessWidget {
             ],
           ),
         ),
-
         FutureBuilder(
           future: _moviesFuture,
           builder: (context, snapshot) {
@@ -336,7 +324,7 @@ class CustomCarousel extends StatelessWidget {
               return Center(
                 child: Column(
                   children: [
-                    Text("API failure click retry to load movies"),
+                    const Text("API failure click retry to load movies"),
                     TextButton(
                       onPressed: () {
                         if (type == MovieType.upcoming) {
@@ -345,7 +333,7 @@ class CustomCarousel extends StatelessWidget {
                           api.getTopRated();
                         }
                       },
-                      child: Text('Retry'),
+                      child: const Text('Retry'),
                     ),
                   ],
                 ),
@@ -365,9 +353,18 @@ class CustomCarousel extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       child: GestureDetector(
                         onTap: () {
+                          context.read<ApiCallManager>().getDetails(
+                            type == MovieType.top_rated
+                                ? api.topRatedMovies[idx]['id'].toString()
+                                : api.upComingMovies[idx]['id'].toString(),
+                          );
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => MovieDetailPage(),
+                              builder: (_) => MovieDetailPage(
+                                movieId: type == MovieType.top_rated
+                                    ? api.topRatedMovies[idx]['id'].toString()
+                                    : api.upComingMovies[idx]['id'].toString(),
+                              ),
                             ),
                           );
                         },

@@ -36,12 +36,10 @@ class TmdbImage extends StatelessWidget {
   }
 
   Widget _loadingWidget() {
-    return const Center(
-      child: SizedBox(
-        width: 24,
-        height: 24,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      ),
+    return SizedBox(
+      width: 24,
+      height: 24,
+      child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
     );
   }
 
