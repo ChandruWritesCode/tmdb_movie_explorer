@@ -48,14 +48,14 @@ class YtTrailer extends ChangeNotifier {
             return v['key'];
           }
         }
-
-
+        
         return '';
       } catch (e) {
-        // debugPrint('Attempt $attempt failed: $e');
+        debugPrint('YT Attempt $attempt failed: $e');
 
-        if (attempt == 3) rethrow;
-
+        if (attempt == 3) {
+          throw Exception('Trailer loading error');
+        }
         await Future.delayed(const Duration(seconds: 2));
       }
     }

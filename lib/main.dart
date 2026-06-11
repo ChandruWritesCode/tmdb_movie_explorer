@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:tmdb_movie_explorer/pages/home_page.dart';
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
@@ -45,17 +47,44 @@ class MyApp extends StatelessWidget {
         builder: (context, settings, child) => MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
-            textTheme: GoogleFonts.manropeTextTheme(
-              ThemeData.dark().textTheme,
-            ).apply(bodyColor: Colors.white, displayColor: Colors.white),
-            brightness: settings.darkMode ? Brightness.dark : Brightness.light,
-            useMaterial3: true,
             colorSchemeSeed: const Color.fromRGBO(13, 37, 63, 1),
-            // colorSchemeSeed: const Color.fromRGBO(1, 180, 228, 1),
+            brightness: Brightness.light,
+            textTheme: GoogleFonts.manropeTextTheme(),
+          ),
+
+          darkTheme: ThemeData(
+            colorSchemeSeed: const Color.fromRGBO(13, 37, 63, 1),
+            brightness: Brightness.dark,
+            textTheme: GoogleFonts.manropeTextTheme(ThemeData.dark().textTheme)
+                .copyWith(
+                  bodyLarge: const TextStyle(color: Color(0xFFF5F5F5)),
+                  bodyMedium: const TextStyle(color: Color(0xFFE0E0E0)),
+                  titleLarge: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  headlineMedium: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
             scaffoldBackgroundColor: settings.darkMode
                 ? Colors.black
                 : Colors.white,
           ),
+          // theme: ThemeData(
+          //   textTheme: GoogleFonts.manropeTextTheme(
+          //     ThemeData.dark().textTheme,
+          //   ).apply(bodyColor: Colors.white, displayColor: Colors.white),
+          //   brightness: settings.darkMode ? Brightness.dark : Brightness.light,
+          //   useMaterial3: true,
+          //   colorSchemeSeed: const Color.fromRGBO(13, 37, 63, 1),
+          //   // colorSchemeSeed: const Color.fromRGBO(1, 180, 228, 1),
+          //   scaffoldBackgroundColor: settings.darkMode
+          //       ? Colors.black
+          //       : Colors.white,
+          // ),
+          themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
           home: context.read<SettingsProvider>().firstLogin
               ? LoginPage()
               : HomePage(),

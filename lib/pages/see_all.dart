@@ -38,9 +38,6 @@ class SeeAllMovieList extends StatelessWidget {
               itemBuilder: (context, idx) {
                 return GestureDetector(
                   onTap: () {
-                    context.read<ApiCallManager>().getDetails(
-                      moviesList[idx]['id'].toString(),
-                    );
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => MovieDetailPage(

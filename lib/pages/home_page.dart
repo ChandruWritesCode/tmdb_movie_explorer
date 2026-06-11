@@ -18,8 +18,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late Future<void> _moviesFuture;
   int page = 0;
+  bool isDrawerOpen = false;
   @override
   void initState() {
     super.initState();
@@ -29,6 +31,47 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      onDrawerChanged: (isOpen) {
+        setState(() {
+          isDrawerOpen = isOpen;
+        });
+      },
+      key: _scaffoldKey,
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            // const DrawerHeader(child: Text('Movie Explorer')),
+            Container(
+              padding: EdgeInsets.all(20),
+              child: Text(
+                'Movie Explorer',
+                style: const TextStyle(fontSize: 25),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Home'),
+              onTap: () {},
+            ),
+            ListView.builder(
+              physics: NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: context.watch<ApiCallManager>().genres.length,
+              itemBuilder: (context, idx) {
+                return Container(
+                  padding: EdgeInsets.all(10),
+                  child: ListTile(
+                    onTap: () {},
+                    title: Text(
+                      context.watch<ApiCallManager>().genres[idx]['name'],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
       bottomNavigationBar: ClipRRect(
         child: NavigationBar(
           elevation: 0,
@@ -84,7 +127,18 @@ class _HomePageState extends State<HomePage> {
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 5,
                                 ),
-                                child: const LogoAnim(),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    context.read<ApiCallManager>().getGenres();
+                                    _scaffoldKey.currentState?.openDrawer();
+                                  },
+                                  child: AnimatedRotation(
+                                    turns: isDrawerOpen ? 0.25 : 0.0, // 90°
+                                    duration: const Duration(milliseconds: 600),
+                                    curve: Curves.easeInOut,
+                                    child: const LogoAnim(),
+                                  ),
+                                ),
                               ),
                               const Spacer(),
                               IconButton(
@@ -178,9 +232,6 @@ class PopularMovieCard extends StatelessWidget {
 
                   OutlinedButton(
                     onPressed: () {
-                      context.read<ApiCallManager>().getDetails(
-                        movie['id'].toString(),
-                      );
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) =>
@@ -200,7 +251,7 @@ class PopularMovieCard extends StatelessWidget {
   }
 }
 
-class CustomCarousel extends StatelessWidget {
+class CustomCarousel extends StatefulWidget {
   final MovieType type;
   final CarouselOptions? options;
   final Future<void> _moviesFuture;
@@ -212,24 +263,26 @@ class CustomCarousel extends StatelessWidget {
   });
 
   @override
+  State<CustomCarousel> createState() => _CustomCarouselState();
+}
+
+class _CustomCarouselState extends State<CustomCarousel> {
+  @override
   Widget build(BuildContext context) {
     final api = context.watch<ApiCallManager>();
-    if (type == MovieType.popular) {
+    if (widget.type == MovieType.popular) {
       // TODO optimize the Future builders and watch providers
       return FutureBuilder(
-        future: _moviesFuture,
+        future: widget._moviesFuture,
         builder: (context, snapshot) {
-          bool isLoading = false;
-          if (snapshot.connectionState == ConnectionState.waiting ||
-              isLoading) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            isLoading = false;
             return Center(
               child: Text(
-                'Failed to load movies\n${snapshot.error}',
+                'Failed to load movies check your connection',
                 textAlign: TextAlign.center,
               ),
             );
@@ -238,27 +291,11 @@ class CustomCarousel extends StatelessWidget {
           final movies = api.popularMovies;
 
           if (movies.isEmpty) {
-            return Padding(
-              padding: EdgeInsetsGeometry.only(top: 200),
-              child: Center(
-                child: Column(
-                  children: [
-                    const Text("API failure click retry to load movies"),
-                    TextButton(
-                      onPressed: () {
-                        isLoading = true;
-                        api.getPopular();
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            );
+            api.getPopular();
           }
 
           return CarouselSlider.builder(
-            options: options!,
+            options: widget.options!,
             itemCount: movies.length,
             itemBuilder: (context, idx, realIdx) {
               return PopularMovieCard(movie: api.popularMovies[idx]);
@@ -275,7 +312,7 @@ class CustomCarousel extends StatelessWidget {
           child: Row(
             children: [
               Text(
-                type.title,
+                widget.type.title,
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
@@ -289,8 +326,8 @@ class CustomCarousel extends StatelessWidget {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => SeeAllMovieList(
-                        type: type,
-                        moviesFuture: _moviesFuture,
+                        type: widget.type,
+                        moviesFuture: widget._moviesFuture,
                       ),
                     ),
                   );
@@ -301,7 +338,7 @@ class CustomCarousel extends StatelessWidget {
           ),
         ),
         FutureBuilder(
-          future: _moviesFuture,
+          future: widget._moviesFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const CircularProgressIndicator();
@@ -316,28 +353,16 @@ class CustomCarousel extends StatelessWidget {
               );
             }
 
-            final itemCount = type == MovieType.top_rated
+            final itemCount = widget.type == MovieType.top_rated
                 ? api.topRatedMovies.length
                 : api.upComingMovies.length;
 
             if (itemCount == 0) {
-              return Center(
-                child: Column(
-                  children: [
-                    const Text("API failure click retry to load movies"),
-                    TextButton(
-                      onPressed: () {
-                        if (type == MovieType.upcoming) {
-                          api.getUpcoming();
-                        } else {
-                          api.getTopRated();
-                        }
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
+              if (widget.type == MovieType.upcoming) {
+                api.getUpcoming();
+              } else {
+                api.getTopRated();
+              }
             }
 
             return SizedBox(
@@ -350,25 +375,20 @@ class CustomCarousel extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(10),
                       child: GestureDetector(
                         onTap: () {
-                          context.read<ApiCallManager>().getDetails(
-                            type == MovieType.top_rated
-                                ? api.topRatedMovies[idx]['id'].toString()
-                                : api.upComingMovies[idx]['id'].toString(),
-                          );
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => MovieDetailPage(
-                                movieId: type == MovieType.top_rated
+                                movieId: widget.type == MovieType.top_rated
                                     ? api.topRatedMovies[idx]['id'].toString()
                                     : api.upComingMovies[idx]['id'].toString(),
                               ),
                             ),
                           );
                         },
-                        child: MovieCard(type: type, idx: idx),
+                        child: MovieCard(type: widget.type, idx: idx),
                       ),
                     ),
                   );
