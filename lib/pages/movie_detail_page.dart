@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tmdb_movie_explorer/api/image_cacher.dart';
-import 'package:tmdb_movie_explorer/pages/home_page.dart';
+import 'package:tmdb_movie_explorer/providers/basic_providers.dart';
 import 'package:tmdb_movie_explorer/providers/tmdb_api_call.dart';
 import 'package:tmdb_movie_explorer/providers/yt_trailer.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
@@ -50,6 +50,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
 
   @override
   void dispose() {
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     super.dispose();
   }
 
@@ -84,8 +85,8 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
             ),
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
-              title: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              title: ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
                 child: Text(
                   movieDetails['title'],
                   maxLines: 2,
@@ -133,13 +134,16 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                 SizedBox(
                   height: 30,
                   child: Container(
+                    color: Colors.transparent,
                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     child: Row(
                       children: [
-                        Icon(Icons.star_rate, color: Colors.yellow),
+                        movieDetails['vote_average'] != 0
+                            ? Icon(Icons.star_rate, color: Colors.yellow)
+                            : SizedBox(),
                         const SizedBox(width: 2),
                         Text(
-                          '${movieDetails['vote_average']}/10 • ${Duration(minutes: movieDetails['runtime']).inHours}h ${movieDetails['runtime'] % 60}m • ${DateFormat('dd-MMM-yyyy').format(DateTime.parse(movieDetails['release_date']))}',
+                          '${movieDetails['vote_average'] != 0 ? '${movieDetails['vote_average']}/10' : 'No ratings'} • ${Duration(minutes: movieDetails['runtime']).inHours}h ${movieDetails['runtime'] % 60}m • ${DateFormat('dd-MMM-yyyy').format(DateTime.parse(movieDetails['release_date']))}',
                         ),
                       ],
                     ),
@@ -199,27 +203,54 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                     spacing: 10,
                     children: [
                       Expanded(
-                        child: OutlinedButton(
+                        child: TextButton(
                           style: ButtonStyle(
+                            backgroundColor: WidgetStatePropertyAll(
+                              context.watch<UserData>().isWatched(
+                                    widget.movieId,
+                                  )
+                                  ? Theme.of(context).dividerColor
+                                  : Theme.of(context).canvasColor,
+                            ),
                             shape: WidgetStatePropertyAll(
                               RoundedRectangleBorder(
+                                side: BorderSide(
+                                  color: Theme.of(context).dividerColor,
+                                ),
                                 borderRadius: BorderRadiusGeometry.all(
                                   Radius.circular(10),
                                 ),
                               ),
                             ),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            context.read<UserData>().setWatched(
+                              widget.movieId,
+                              movieDetails['title'],
+                            );
+                            setState(() {});
+                          },
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            spacing: 5,
-                            children: [Icon(Icons.add), Text('My list')],
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(Icons.done),
+                              Text(
+                                'Watched',
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                       Expanded(
                         child: OutlinedButton(
                           style: ButtonStyle(
+                            backgroundColor: WidgetStatePropertyAll(
+                              context.watch<UserData>().isRated(widget.movieId)
+                                  ? Theme.of(context).dividerColor
+                                  : Theme.of(context).canvasColor,
+                            ),
                             shape: WidgetStatePropertyAll(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadiusGeometry.all(
@@ -228,32 +259,24 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                               ),
                             ),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            context.read<UserData>().setRated(
+                              widget.movieId,
+                              movieDetails['title'],
+                            );
+                            setState(() {});
+                          },
                           child: Row(
-                            spacing: 0.329,
                             mainAxisAlignment: MainAxisAlignment.center,
+                            spacing: 3,
                             crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [Icon(Icons.done), Text('Watched')],
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: OutlinedButton(
-                          style: ButtonStyle(
-                            shape: WidgetStatePropertyAll(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadiusGeometry.all(
-                                  Radius.circular(10),
-                                ),
+                            children: [
+                              Icon(Icons.thumb_up),
+                              Text(
+                                'Rate',
+                                style: const TextStyle(fontSize: 13),
                               ),
-                            ),
-                          ),
-                          onPressed: () {},
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            spacing: 10,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [Icon(Icons.thumb_up), Text('Rate')],
+                            ],
                           ),
                         ),
                       ),
@@ -373,7 +396,11 @@ class _CustomYtWidgetState extends State<CustomYtWidget> {
       body: Center(
         child: SizedBox(
           child: !isYtError
-              ? Column(children: [YoutubePlayer(controller: controller)])
+              ? SingleChildScrollView(
+                  child: Column(
+                    children: [YoutubePlayer(controller: controller)],
+                  ),
+                )
               : Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -408,7 +435,7 @@ class SimilarMovies extends StatefulWidget {
 }
 
 class _SimilarMoviesState extends State<SimilarMovies> {
-  List similarMovies = [];
+  late List similarMovies = [];
   @override
   void initState() {
     super.initState();

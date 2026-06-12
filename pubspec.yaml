@@ -42,7 +42,6 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   launcher_name: ^1.0.2
   youtube_player_iframe: ^6.0.2
-  tmdb_api: ^2.2.3
   google_fonts: ^8.1.0
   intl: ^0.20.2
 

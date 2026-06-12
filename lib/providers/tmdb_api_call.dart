@@ -13,6 +13,30 @@ class ApiCallManager extends ChangeNotifier {
   List popularMovies = [];
   List genres = [];
 
+  List? searchResults;
+
+  void startSearch() {
+    searchResults = null;
+    notifyListeners();
+  }
+
+  Future<void> searchWithQuery(String query) async {
+    try {
+      searchResults = await _search(query);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Search failed: $e');
+      await Future.delayed(Duration(seconds: 1));
+      searchWithQuery(query);
+    }
+  }
+
+  Future<List<dynamic>> _search(String query) async {
+    return await fetchMovies(
+      'https://api.themoviedb.org/3/search/movie?query=$query&api_key=$apiKey',
+    );
+  }
+
   Future<List<dynamic>> fetchMovies(String url) async {
     for (int attempt = 1; attempt <= 3; attempt++) {
       try {
@@ -30,7 +54,7 @@ class ApiCallManager extends ChangeNotifier {
           throw Exception('Detail fetch error');
         }
 
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(const Duration(seconds: 1));
       }
     }
 
@@ -107,7 +131,7 @@ class ApiCallManager extends ChangeNotifier {
     }
     return {};
   }
-  
+
   Future<void> getGenres() async {
     genres = await fetchGenresList();
     notifyListeners();
@@ -116,7 +140,9 @@ class ApiCallManager extends ChangeNotifier {
   Future<List<dynamic>> getSimilarMovies(String movieId) async {
     List movies = [];
     try {
-      movies = await fetchMovies('https://api.themoviedb.org/3/movie/$movieId/similar?api_key=$apiKey');
+      movies = await fetchMovies(
+        'https://api.themoviedb.org/3/movie/$movieId/recommendations?api_key=$apiKey',
+      );
     } catch (_) {
       movies = [];
     }
@@ -145,7 +171,7 @@ class ApiCallManager extends ChangeNotifier {
         // debugPrint('Attempt $attempt failed: $e');
         if (attempt == 3) rethrow;
 
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(const Duration(seconds: 1));
       }
     }
     return [];

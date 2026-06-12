@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tmdb_movie_explorer/pages/home_page.dart';
+import 'package:tmdb_movie_explorer/pages/movie_cards_carousel.dart';
 import 'package:tmdb_movie_explorer/pages/movie_detail_page.dart';
 import 'package:tmdb_movie_explorer/providers/tmdb_api_call.dart';
 
